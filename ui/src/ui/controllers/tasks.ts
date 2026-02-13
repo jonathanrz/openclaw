@@ -1,10 +1,12 @@
+import type { GatewayBrowserClient } from "../gateway.ts";
 import type { TaskRunRecord } from "../views/tasks.ts";
 
 export type TasksState = {
   tasksLoading: boolean;
   tasksResult: TasksListResult | null;
   tasksError: string | null;
-  client: { call: (method: string, params?: unknown) => Promise<unknown> } | null;
+  client: GatewayBrowserClient | null;
+  connected: boolean;
 };
 
 export type TasksListResult = {
@@ -13,7 +15,7 @@ export type TasksListResult = {
 };
 
 export async function loadTasks(state: TasksState, opts?: { quiet?: boolean }): Promise<void> {
-  if (!state.client) {
+  if (!state.client || !state.connected) {
     if (!opts?.quiet) {
       state.tasksError = "Not connected";
     }
@@ -24,7 +26,7 @@ export async function loadTasks(state: TasksState, opts?: { quiet?: boolean }): 
     state.tasksError = null;
   }
   try {
-    const result = (await state.client.call("tasks.list", {})) as TasksListResult;
+    const result = await state.client.request<TasksListResult>("tasks.list", {});
     state.tasksResult = result;
     if (!opts?.quiet) {
       state.tasksError = null;
@@ -46,15 +48,16 @@ export function hasRunningTasks(state: TasksState): boolean {
 }
 
 export type AbortState = {
-  client: { call: (method: string, params?: unknown) => Promise<unknown> } | null;
+  client: GatewayBrowserClient | null;
+  connected: boolean;
 };
 
 export async function abortTask(state: AbortState, sessionKey: string): Promise<void> {
-  if (!state.client) {
+  if (!state.client || !state.connected) {
     return;
   }
   try {
-    await state.client.call("agent.abort", { sessionKey });
+    await state.client.request("agent.abort", { sessionKey });
   } catch (err) {
     console.error("Failed to abort task:", err);
   }
