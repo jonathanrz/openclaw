@@ -69,6 +69,9 @@ export type ChatProps = {
   onCloseSidebar?: () => void;
   onSplitRatioChange?: (ratio: number) => void;
   onChatScroll?: (event: Event) => void;
+  onDeleteSession?: () => Promise<void>;
+  isTaskSession?: boolean;
+  isDeletingSession?: boolean;
 };
 
 const COMPACTION_TOAST_DURATION_MS = 5000;
@@ -268,6 +271,23 @@ export function renderChat(props: ChatProps) {
       ${props.disabledReason ? html`<div class="callout">${props.disabledReason}</div>` : nothing}
 
       ${props.error ? html`<div class="callout danger">${props.error}</div>` : nothing}
+
+      ${
+        props.isTaskSession
+          ? html`
+            <div class="task-session-banner">
+              <span class="task-session-label">📋 Task Session</span>
+              <button
+                class="btn small danger"
+                ?disabled=${props.isDeletingSession}
+                @click=${props.onDeleteSession}
+              >
+                ${props.isDeletingSession ? "Deleting..." : "Delete Task"}
+              </button>
+            </div>
+          `
+          : nothing
+      }
 
       ${
         props.focusMode

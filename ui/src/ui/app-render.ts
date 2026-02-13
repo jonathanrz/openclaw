@@ -1170,6 +1170,20 @@ export function renderApp(state: AppViewState) {
                 onSplitRatioChange: (ratio: number) => state.handleSplitRatioChange(ratio),
                 assistantName: state.assistantName,
                 assistantAvatar: state.assistantAvatar,
+                isTaskSession: state.sessionKey.includes(":subagent:"),
+                isDeletingSession: state.tasksDeletingKey === state.sessionKey,
+                onDeleteSession: async () => {
+                  state.tasksDeletingKey = state.sessionKey;
+                  try {
+                    await deleteSession(state, state.sessionKey);
+                    // After deletion, go back to tasks tab
+                    state.setTab("tasks");
+                    await loadTasks(state);
+                    await loadSessions(state);
+                  } finally {
+                    state.tasksDeletingKey = null;
+                  }
+                },
               })
             : nothing
         }
