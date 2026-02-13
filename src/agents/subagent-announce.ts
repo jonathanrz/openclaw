@@ -25,6 +25,7 @@ import {
   waitForEmbeddedPiRunEnd,
 } from "./pi-embedded.js";
 import { type AnnounceQueueItem, enqueueAnnounce } from "./subagent-announce-queue.js";
+import { updateSubagentFindings } from "./subagent-registry.js";
 import { readLatestAssistantReply } from "./tools/agent-step.js";
 
 function formatTokenCount(value?: number) {
@@ -473,6 +474,11 @@ export async function runSubagentAnnounceFlow(params: {
 
     if (!outcome) {
       outcome = { status: "unknown" };
+    }
+
+    // Save findings to the registry so UI can display them
+    if (reply?.trim()) {
+      updateSubagentFindings(params.childRunId, reply.trim());
     }
 
     // Build stats

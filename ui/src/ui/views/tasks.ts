@@ -15,6 +15,8 @@ export type TaskRunRecord = {
   startedAt?: number;
   endedAt?: number;
   outcome?: { status: "ok" | "error" | "timeout"; error?: string };
+  /** The final output/findings from the subagent */
+  findings?: string;
 };
 
 export type TaskStatusFilter = "all" | "running" | "completed" | "failed";
@@ -51,6 +53,7 @@ function getTaskStatus(
   error?: string;
   requesterDisplayKey?: string;
   runId?: string;
+  findings?: string;
 } {
   const taskRecord = tasks.find((t) => t.childSessionKey === row.key);
   if (taskRecord) {
@@ -70,6 +73,7 @@ function getTaskStatus(
         error: taskRecord.outcome.error,
         requesterDisplayKey: taskRecord.requesterDisplayKey,
         runId: taskRecord.runId,
+        findings: taskRecord.findings,
       };
     }
     return {
@@ -79,6 +83,7 @@ function getTaskStatus(
       startedAt: taskRecord.startedAt,
       requesterDisplayKey: taskRecord.requesterDisplayKey,
       runId: taskRecord.runId,
+      findings: taskRecord.findings,
     };
   }
   return {
@@ -131,6 +136,29 @@ function truncateTask(task?: string, maxLen = 100): string {
     return task;
   }
   return task.slice(0, maxLen - 3) + "...";
+}
+
+/** Extract GitHub PR URLs from text */
+function extractPrUrls(text?: string): string[] {
+  if (!text) {
+    return [];
+  }
+  const prRegex = /https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/pull\/\d+/g;
+  const matches = text.match(prRegex);
+  if (!matches) {
+    return [];
+  }
+  // Remove duplicates
+  return [...new Set(matches)];
+}
+
+/** Extract repo and PR number from a GitHub PR URL */
+function parsePrUrl(url: string): { repo: string; number: string } | null {
+  const match = url.match(/github\.com\/([^/]+\/[^/]+)\/pull\/(\d+)/);
+  if (!match) {
+    return null;
+  }
+  return { repo: match[1], number: match[2] };
 }
 
 export function renderTasks(props: TasksProps) {
@@ -395,7 +423,59 @@ export function renderTasks(props: TasksProps) {
       .task-card.running .task-status {
         animation: pulse 2s ease-in-out infinite;
       }
+      .task-pr-links {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      .pr-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: var(--color-success-bg, #14532d);
+        color: var(--color-success, #22c55e);
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--color-success, #22c55e);
+      }
+      .pr-link:hover {
+        background: var(--color-success, #22c55e);
+        color: #000;
+      }
+      .pr-icon {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+      }
     </style>
+  `;
+}
+
+function renderPrLinks(findings?: string) {
+  const prUrls = extractPrUrls(findings);
+  if (prUrls.length === 0) {
+    return nothing;
+  }
+  return html`
+    <div class="task-pr-links">
+      ${prUrls.map((url) => {
+        const parsed = parsePrUrl(url);
+        const label = parsed ? `PR #${parsed.number}` : "Pull Request";
+        return html`
+          <a href=${url} target="_blank" rel="noopener noreferrer" class="pr-link">
+            <svg class="pr-icon" viewBox="0 0 16 16" fill="currentColor">
+              <path fill-rule="evenodd" d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"></path>
+            </svg>
+            ${label}
+          </a>
+        `;
+      })}
+    </div>
   `;
 }
 
@@ -410,6 +490,8 @@ function renderTaskCard(row: GatewaySessionRow, props: TasksProps) {
         <div class="task-label">${taskInfo.label || row.label || "Unnamed Task"}</div>
         <div class="task-status ${taskInfo.status}">${taskInfo.status}</div>
       </div>
+
+      ${renderPrLinks(taskInfo.findings)}
 
       ${
         taskInfo.task

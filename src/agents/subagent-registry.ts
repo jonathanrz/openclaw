@@ -25,6 +25,8 @@ export type SubagentRunRecord = {
   archiveAtMs?: number;
   cleanupCompletedAt?: number;
   cleanupHandled?: boolean;
+  /** The final output/findings from the subagent (last assistant reply) */
+  findings?: string;
 };
 
 const subagentRuns = new Map<string, SubagentRunRecord>();
@@ -433,6 +435,15 @@ export function listSubagentRunsForRequester(requesterSessionKey: string): Subag
 
 export function listAllSubagentRuns(): SubagentRunRecord[] {
   return [...subagentRuns.values()];
+}
+
+export function updateSubagentFindings(runId: string, findings: string | undefined): void {
+  const entry = subagentRuns.get(runId);
+  if (!entry) {
+    return;
+  }
+  entry.findings = findings;
+  persistSubagentRuns();
 }
 
 export function initSubagentRegistry() {
