@@ -18,6 +18,7 @@ import { sendHandlers } from "./server-methods/send.js";
 import { sessionsHandlers } from "./server-methods/sessions.js";
 import { skillsHandlers } from "./server-methods/skills.js";
 import { systemHandlers } from "./server-methods/system.js";
+import { tasksHandlers } from "./server-methods/tasks.js";
 import { talkHandlers } from "./server-methods/talk.js";
 import { ttsHandlers } from "./server-methods/tts.js";
 import { updateHandlers } from "./server-methods/update.js";
@@ -64,6 +65,7 @@ const READ_METHODS = new Set([
   "voicewake.get",
   "sessions.list",
   "sessions.preview",
+  "tasks.list",
   "cron.list",
   "cron.status",
   "cron.runs",
@@ -180,6 +182,7 @@ export const coreGatewayHandlers: GatewayRequestHandlers = {
   ...ttsHandlers,
   ...skillsHandlers,
   ...sessionsHandlers,
+  ...tasksHandlers,
   ...systemHandlers,
   ...updateHandlers,
   ...nodeHandlers,

@@ -431,6 +431,10 @@ export function listSubagentRunsForRequester(requesterSessionKey: string): Subag
   return [...subagentRuns.values()].filter((entry) => entry.requesterSessionKey === key);
 }
 
+export function listAllSubagentRuns(): SubagentRunRecord[] {
+  return [...subagentRuns.values()];
+}
+
 export function initSubagentRegistry() {
   restoreSubagentRunsOnce();
 }

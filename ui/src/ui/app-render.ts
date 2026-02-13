@@ -50,6 +50,7 @@ import {
   updateSkillEdit,
   updateSkillEnabled,
 } from "./controllers/skills.ts";
+import { loadTasks, abortTask } from "./controllers/tasks.ts";
 import { loadUsage, loadSessionTimeSeries, loadSessionLogs } from "./controllers/usage.ts";
 import { icons } from "./icons.ts";
 import { normalizeBasePath, TAB_GROUPS, subtitleForTab, titleForTab } from "./navigation.ts";
@@ -76,6 +77,7 @@ import { renderNodes } from "./views/nodes.ts";
 import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
+import { renderTasks } from "./views/tasks.ts";
 import { renderUsage } from "./views/usage.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
@@ -311,6 +313,37 @@ export function renderApp(state: AppViewState) {
                 onRefresh: () => loadSessions(state),
                 onPatch: (key, patch) => patchSession(state, key, patch),
                 onDelete: (key) => deleteSession(state, key),
+              })
+            : nothing
+        }
+
+        ${
+          state.tab === "tasks"
+            ? renderTasks({
+                loading: state.tasksLoading || state.sessionsLoading,
+                sessions: state.sessionsResult?.sessions ?? [],
+                tasks: state.tasksResult?.tasks ?? [],
+                error: state.tasksError || state.sessionsError,
+                basePath: state.basePath,
+                statusFilter: state.tasksStatusFilter,
+                onStatusFilterChange: (filter) => {
+                  state.tasksStatusFilter = filter;
+                },
+                onRefresh: () => {
+                  void loadTasks(state);
+                  void loadSessions(state);
+                },
+                onViewSession: (key) => {
+                  state.sessionKey = key;
+                  state.setTab("chat");
+                },
+                onDeleteSession: (key) => deleteSession(state, key),
+                onAbortTask: (key) => {
+                  void abortTask(state, key).then(() => {
+                    void loadTasks(state);
+                    void loadSessions(state);
+                  });
+                },
               })
             : nothing
         }

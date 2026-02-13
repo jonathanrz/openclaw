@@ -4,7 +4,7 @@ export const TAB_GROUPS = [
   { label: "Chat", tabs: ["chat"] },
   {
     label: "Control",
-    tabs: ["overview", "channels", "instances", "sessions", "usage", "cron"],
+    tabs: ["overview", "channels", "instances", "sessions", "tasks", "usage", "cron"],
   },
   { label: "Agent", tabs: ["agents", "skills", "nodes"] },
   { label: "Settings", tabs: ["config", "debug", "logs"] },
@@ -16,6 +16,7 @@ export type Tab =
   | "channels"
   | "instances"
   | "sessions"
+  | "tasks"
   | "usage"
   | "cron"
   | "skills"
@@ -31,6 +32,7 @@ const TAB_PATHS: Record<Tab, string> = {
   channels: "/channels",
   instances: "/instances",
   sessions: "/sessions",
+  tasks: "/tasks",
   usage: "/usage",
   cron: "/cron",
   skills: "/skills",
@@ -136,6 +138,8 @@ export function iconForTab(tab: Tab): IconName {
       return "radio";
     case "sessions":
       return "fileText";
+    case "tasks":
+      return "loader";
     case "usage":
       return "barChart";
     case "cron":
@@ -167,6 +171,8 @@ export function titleForTab(tab: Tab) {
       return "Instances";
     case "sessions":
       return "Sessions";
+    case "tasks":
+      return "Tasks";
     case "usage":
       return "Usage";
     case "cron":
@@ -200,6 +206,8 @@ export function subtitleForTab(tab: Tab) {
       return "Presence beacons from connected clients and nodes.";
     case "sessions":
       return "Inspect active sessions and adjust per-session defaults.";
+    case "tasks":
+      return "Monitor spawned sub-agent tasks running in parallel.";
     case "usage":
       return "";
     case "cron":

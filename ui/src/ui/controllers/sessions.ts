@@ -21,16 +21,20 @@ export async function loadSessions(
     limit?: number;
     includeGlobal?: boolean;
     includeUnknown?: boolean;
+    quiet?: boolean;
   },
 ) {
   if (!state.client || !state.connected) {
     return;
   }
-  if (state.sessionsLoading) {
+  // Skip if already loading (but allow quiet refreshes to proceed)
+  if (state.sessionsLoading && !overrides?.quiet) {
     return;
   }
-  state.sessionsLoading = true;
-  state.sessionsError = null;
+  if (!overrides?.quiet) {
+    state.sessionsLoading = true;
+    state.sessionsError = null;
+  }
   try {
     const includeGlobal = overrides?.includeGlobal ?? state.sessionsIncludeGlobal;
     const includeUnknown = overrides?.includeUnknown ?? state.sessionsIncludeUnknown;
@@ -51,9 +55,13 @@ export async function loadSessions(
       state.sessionsResult = res;
     }
   } catch (err) {
-    state.sessionsError = String(err);
+    if (!overrides?.quiet) {
+      state.sessionsError = String(err);
+    }
   } finally {
-    state.sessionsLoading = false;
+    if (!overrides?.quiet) {
+      state.sessionsLoading = false;
+    }
   }
 }
 

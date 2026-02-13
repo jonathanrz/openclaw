@@ -228,6 +228,11 @@ export class OpenClawApp extends LitElement {
   @state() sessionsIncludeGlobal = true;
   @state() sessionsIncludeUnknown = false;
 
+  @state() tasksLoading = false;
+  @state() tasksResult: import("./controllers/tasks.js").TasksListResult | null = null;
+  @state() tasksError: string | null = null;
+  @state() tasksStatusFilter: "all" | "running" | "completed" | "failed" = "all";
+
   @state() usageLoading = false;
   @state() usageResult: import("./types.js").SessionsUsageResult | null = null;
   @state() usageCostSummary: import("./types.js").CostUsageSummary | null = null;
@@ -333,6 +338,7 @@ export class OpenClawApp extends LitElement {
   private nodesPollInterval: number | null = null;
   private logsPollInterval: number | null = null;
   private debugPollInterval: number | null = null;
+  private tasksPollInterval: number | null = null;
   private logsScrollFrame: number | null = null;
   private toolStreamById = new Map<string, ToolStreamEntry>();
   private toolStreamOrder: string[] = [];
