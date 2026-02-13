@@ -326,6 +326,7 @@ export function renderApp(state: AppViewState) {
                 error: state.tasksError || state.sessionsError,
                 basePath: state.basePath,
                 statusFilter: state.tasksStatusFilter,
+                deletingTaskKey: state.tasksDeletingKey,
                 onStatusFilterChange: (filter) => {
                   state.tasksStatusFilter = filter;
                 },
@@ -337,7 +338,16 @@ export function renderApp(state: AppViewState) {
                   state.sessionKey = key;
                   state.setTab("chat");
                 },
-                onDeleteSession: (key) => deleteSession(state, key),
+                onDeleteSession: async (key) => {
+                  state.tasksDeletingKey = key;
+                  try {
+                    await deleteSession(state, key);
+                    await loadTasks(state);
+                    await loadSessions(state);
+                  } finally {
+                    state.tasksDeletingKey = null;
+                  }
+                },
                 onAbortTask: (key) => {
                   void abortTask(state, key).then(() => {
                     void loadTasks(state);

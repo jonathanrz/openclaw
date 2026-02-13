@@ -28,10 +28,11 @@ export type TasksProps = {
   error: string | null;
   basePath: string;
   statusFilter: TaskStatusFilter;
+  deletingTaskKey: string | null;
   onStatusFilterChange: (filter: TaskStatusFilter) => void;
   onRefresh: () => void;
   onViewSession: (key: string) => void;
-  onDeleteSession: (key: string) => void;
+  onDeleteSession: (key: string) => Promise<void>;
   onAbortTask: (sessionKey: string) => void;
 };
 
@@ -416,6 +417,14 @@ export function renderTasks(props: TasksProps) {
       .btn.warning:hover {
         background: var(--color-warning-hover, #d97706);
       }
+      .btn.success {
+        background: var(--color-success, #22c55e);
+        color: #000;
+        border-color: var(--color-success, #22c55e);
+      }
+      .btn.success:hover {
+        background: var(--color-success-hover, #16a34a);
+      }
       @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
@@ -483,6 +492,8 @@ function renderTaskCard(row: GatewaySessionRow, props: TasksProps) {
   const taskInfo = getTaskStatus(row, props.tasks);
   const chatUrl = `${pathForTab("chat", props.basePath)}?session=${encodeURIComponent(row.key)}`;
   const isRunning = taskInfo.status === "running";
+  const isDeleting = props.deletingTaskKey === row.key;
+  const prUrls = extractPrUrls(taskInfo.findings);
 
   return html`
     <div class="task-card ${taskInfo.status}">
@@ -518,6 +529,15 @@ function renderTaskCard(row: GatewaySessionRow, props: TasksProps) {
       <div class="task-actions">
         <a href=${chatUrl} class="btn small">View Chat</a>
         ${
+          prUrls.length > 0
+            ? html`
+              <a href=${prUrls[0]} target="_blank" rel="noopener noreferrer" class="btn small success">
+                View PR
+              </a>
+            `
+            : nothing
+        }
+        ${
           isRunning
             ? html`
               <button
@@ -532,10 +552,10 @@ function renderTaskCard(row: GatewaySessionRow, props: TasksProps) {
         }
         <button
           class="btn small danger"
-          ?disabled=${props.loading}
+          ?disabled=${props.loading || isDeleting}
           @click=${() => props.onDeleteSession(row.key)}
         >
-          Delete
+          ${isDeleting ? "Deleting..." : "Delete"}
         </button>
       </div>
     </div>

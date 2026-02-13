@@ -232,6 +232,7 @@ export class OpenClawApp extends LitElement {
   @state() tasksResult: import("./controllers/tasks.js").TasksListResult | null = null;
   @state() tasksError: string | null = null;
   @state() tasksStatusFilter: "all" | "running" | "completed" | "failed" = "all";
+  @state() tasksDeletingKey: string | null = null;
 
   @state() usageLoading = false;
   @state() usageResult: import("./types.js").SessionsUsageResult | null = null;

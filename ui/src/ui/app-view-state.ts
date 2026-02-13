@@ -154,6 +154,7 @@ export type AppViewState = {
   tasksResult: TasksListResult | null;
   tasksError: string | null;
   tasksStatusFilter: "all" | "running" | "completed" | "failed";
+  tasksDeletingKey: string | null;
   usageLoading: boolean;
   usageResult: SessionsUsageResult | null;
   usageCostSummary: CostUsageSummary | null;
